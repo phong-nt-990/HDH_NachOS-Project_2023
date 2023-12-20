@@ -23,13 +23,10 @@
 #include "ptable.h"
 #include "synch.h"
 
-
-
 class PostOfficeInput;
 class PostOfficeOutput;
 class SynchConsoleInput;
 class SynchConsoleOutput;
-class Semaphore;
 class SynchDisk;
 class PTable;
 class STable;
@@ -66,10 +63,7 @@ class Kernel {
     FileSystem *fileSystem;     
     PostOfficeInput *postOfficeIn;
     PostOfficeOutput *postOfficeOut;
-
-
-
-    // multiprogramming part
+    
     Bitmap *gPhysPageBitMap;
     Semaphore *addrLock;
     PTable *pTab;

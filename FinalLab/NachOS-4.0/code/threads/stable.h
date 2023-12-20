@@ -1,3 +1,13 @@
+/* stable.h
+    Data structure for manage semaphore
+*/
+
+/*  --------------------------------
+    19CNTN - HCMUS
+    19120036, 19120176, 19120200
+    --------------------------------
+*/
+
 #ifndef STABLE_H
 #define STABLE_H
 

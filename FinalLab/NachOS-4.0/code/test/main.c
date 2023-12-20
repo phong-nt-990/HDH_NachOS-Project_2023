@@ -30,7 +30,7 @@ int main() {
     ReadInt(fInput, &nStudent);
     Close(fInput);
     // tao file output.txt de ghi ket qua
-    Create("output.txt");
+    CreateFile("output.txt");
     // thuc thu N tien trinh sinh vien
     for (i = 0; i < nStudent; ++i) {
         studentPid[i] = Exec("student");

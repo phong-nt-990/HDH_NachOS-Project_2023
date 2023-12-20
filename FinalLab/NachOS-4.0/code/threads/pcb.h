@@ -13,37 +13,43 @@ const int MAX_FILENAME_LENGTH = 32;
 class Semaphore;
 
 class PCB {
-private:
-    Semaphore* joinsem; // semaphore for join process
-    Semaphore* exitsem; // semaphore for exit process
-    Semaphore* multex; // exclusive access semaphore
+   private:
+    Semaphore *joinsem; // semaphore cho qua trinh join
+    Semaphore *exitsem; // semaphore cho qua trinh exit
+    Semaphore *multex;  // semaphore cho truy xuat numwait
 
     Thread *thread;     // Tien trinh
     char filename[MAX_FILENAME_LENGTH]; // Ten tien trinh
 
-    int exitcode; 
-    int numwait; // the number of join process
-public:
-    int parentID; // The parent process’s ID
-    OpenFile** fileTable; 
+    int exitcode;
+    int numwait;        // So tien trinh da join
+
+   public:
+    int parentID;       // ID cua tien trinh
+    OpenFile** fileTable;   // quan ly cac file cua tien trinh
     int index;
+    
     PCB();
-    PCB(int id); // Constructor
-    ~PCB(); // Destructor
-    // Load the program has the name is “filename” and the process id is pid
-    int Exec(char* name,int pid); //Create a thread with the name is filename and the process id is pid
-    int GetID(); // Return the PID of the current process
-    int GetNumWait(); // Return the number of the waiting process
-    void JoinWait();// The parent process wait for the child process finishes
-    void ExitWait(); // The child process finishes
-    void JoinRelease(); // The child process notice the parent process
-    void ExitRelease(); // The parent process accept to exit the child process
-    void IncNumWait(); // Increase the number of the waiting process
-    void DecNumWait(); // Decrease the number of the waiting process
-    void SetExitCode(int); // Set the exit code for the process
-    int GetExitCode(); // Return the exitcode
-    void SetFileName(char*); // Set the process name
-    char* GetFileName(); // Return the process name
+    PCB(int id);
+    ~PCB();
+
+    int Exec(char *filename, int pid);  // Tao 1 thread moi
+    int GetID();	
+    int GetNumWait();
+
+    void JoinWait();	// Tien trinh cha doi tien trinh con ket thuc
+    void ExitWait();	// Tien trinh con xin ket thuc
+    void JoinRelease();	// Tien trinh cha tiep tuc thuc thi
+    void ExitRelease();	// Cho phep tien trinh con ket thuc
+
+    void IncNumWait();  // Tang so tien trinh cho
+    void DecNumWait();  // Giam so tien tring cho
+
+    void SetExitCode(int ec);   // Dat exitcode cho ca tien trinh
+    int GetExitCode();          // Lay exitcode cho ca tien trinh
+
+    void SetFileName(char *fn); // Dat filename cho ca tien trinh
+    char *GetFileName();        // Lay filename cho ca tien trinh
 
     int FindFreeSlot();         // Tim vi tri con trong de luu file can open
     OpenFileID Open(char*name, int type);   // mo file name

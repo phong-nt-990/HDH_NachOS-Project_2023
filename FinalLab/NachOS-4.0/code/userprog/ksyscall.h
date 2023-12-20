@@ -2,7 +2,7 @@
  *
  * userprog/ksyscall.h
  *
- * Kernel interface for systemcalls
+ * Kernel interface for systemcalls 
  *
  * by Marcus Voelp  (c) Universitaet Karlsruhe
  *
@@ -13,64 +13,256 @@
 
 #include "kernel.h"
 #include "synchconsole.h"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#define MaxSocketTableSize 20
-
+#include "machine.h"
+#include "filesys.h"
 
 void SysHalt()
 {
-  kernel->interrupt->Halt();
+    kernel->interrupt->Halt();
 }
 
 int SysAdd(int op1, int op2)
 {
-  return op1 + op2;
+    return op1 + op2;
 }
 
-bool doesFileExist(char* filename) {
-    OpenFile* file = kernel->fileSystem->Open(filename);
-    if (file) {
-        // File exists
-        delete file;
+/*  Xu ly syscall RandomNumber
+    Output: sinh ngau nhieu so nguyen duong
+*/
+unsigned int SysRandomNumber()
+{
+    RandomInit(time(0)); // goi ham init random trong sysdep.cc void seed = time(0)
+    return RandomNumber();
+}
+
+bool isDigit(char c)
+{
+    if (c >= '0' && c <= '9')
         return true;
-    } else {
-        // File doesn't exist
-        return false;
+    return false;
+}
+
+// Ham xu li cho system call ReadNum
+int SysReadNum()
+{
+    int num = 0;
+    char c;
+    bool isSign = false;
+    bool isInteger = true;
+
+    do
+    { // bo qua cac ki tu khoang trang va xuong dong
+        c = kernel->synchConsoleIn->GetChar();
+    } while (c == ' ' || c == '\n');
+
+    // Xu li so am
+    if (c == '-')
+    {
+        isSign = true;
+        c = kernel->synchConsoleIn->GetChar();
+        if (c == '\n' || c == ' ') // Tra ve 0 khi co dau cach sau dau '-'
+            return 0;
+    }
+
+    // Neu chua ki tu khong phai so thi khong phai la so nguyen
+    if (!isDigit(c))
+        isInteger = false;
+
+    // Chuyen chuoi ki tu thanh gia tri so
+    do
+    {
+        num = num * 10 + c - '0';
+        c = kernel->synchConsoleIn->GetChar();
+
+        // Neu chua ki tu khong phai so thi so khong phai la so nguyen
+        if (!isDigit(c) && c != '\n' && c != ' ')
+            isInteger = false;
+    } while (c != '\n' && c != ' ');
+
+    if (!isInteger) // Neu khong phai la so nguyen thi tra ve 0
+        return 0;
+
+    if (isSign) // Neu la so am
+        num = -num;
+
+    return num;
+}
+
+// Ham xu li cho system call PrintNum
+void SysPrintNum(int op1)
+{
+    // Neu la so 0 thi in ra so 0
+    if (op1 == 0)
+    {
+        kernel->synchConsoleOut->PutChar('0');
+        return;
+    }
+
+    // Neu la so am thi in ra dau '-' truoc
+    if (op1 < 0)
+    {
+        kernel->synchConsoleOut->PutChar('-');
+        op1 = -op1;
+    }
+
+    char arr[10];
+    int i = 0;
+    int j, r;
+
+    // Chuyen gia tri tuyet doi thanh mang ki tu
+    while (op1 != 0)
+    {
+        r = op1 % 10;
+        arr[i] = r;
+        i++;
+        op1 = op1 / 10;
+    }
+
+    // In mang ki tu cac so
+    for (j = i - 1; j > -1; --j)
+    {
+        kernel->synchConsoleOut->PutChar('0' + arr[j]);
     }
 }
+
+// Xu ly syscall ReadChar
+char SysReadChar()
+{
+    char c;
+    c = kernel->synchConsoleIn->GetChar();
+    return c;
+}
+
+// Xu ly syscall PrintChar
+void SysPrintChar(char c)
+{
+    kernel->synchConsoleOut->PutChar(c);
+}
+
+/*  Xu ly syscall ReadString
+    Input: buffer (char*), do dai toi da cua input
+    Ket qua doc duoc tra vao buffer
+*/
+void SysReadString(char *buffer, int length)
+{
+    int idx;
+    char ch;
+    for (idx = 0; idx < length; ++idx)
+        buffer[idx] = 0;
+    for (idx = 0; idx < length;)
+    {
+        do
+        { // bo qua cac ki tu EOF
+            ch = kernel->synchConsoleIn->GetChar();
+        } while (ch == EOF);
+        if (ch == '\001' || ch == '\n') // enter -> ket thuc nhap
+            break;
+        buffer[idx++] = ch;
+    }
+}
+
+// /* Xu ly syscall PrintString
+//     Input: buffer de in ra mna hinh, length kich thuoc chuoi
+// */
+// int readString(char *buffer, int length)
+// {
+//     int idx;
+//     char ch;
+//     for (idx = 0; idx < length; ++idx)
+//         buffer[idx] = 0;
+//     for (idx = 0; idx < length;)
+//     {
+//         do
+//         { // bo qua cac ki tu EOF
+//             ch = kernel->synchConsoleIn->GetChar();
+//         } while (ch == EOF);
+//         if (ch == '\n') // enter -> ket thuc nhap
+//             break;
+//         buffer[idx++] = ch;
+//     }
+//     buffer[idx++] = '\0';
+//     return idx;
+// }
+
+/*  Xu ly syscall PrintString
+    Input: buffer (char*) de in ra man hinh
+*/
+void SysPrintString(char *buffer)
+{
+    int length = 0;
+    while (buffer[length]) // loop until meet '\0'
+    {
+        kernel->synchConsoleOut->PutChar(buffer[length++]);
+    }
+}
+
+// Syscall tao file
+void SysCreateFile(char *filename)
+{
+    if (strlen(filename) == 0)
+    {
+        printf("File name is not valid\n");
+        DEBUG('a', "File name is not valid\n");
+        kernel->machine->WriteRegister(2, -1); //Return -1 vao thanh ghi R2
+        return;
+    }
+    //Neu khong doc duoc
+    if (filename == NULL)
+    {
+        printf("Not enough memory in system\n");
+        DEBUG('a', "Not enough memory in system\n");
+        kernel->machine->WriteRegister(2, -1);
+        return;
+    }
+    //Tao file bang ham Create cua fileSystem, tra ve ket qua
+    if (!kernel->fileSystem->Create(filename))
+    {
+        //Tao file that bai
+        printf("Error create file '%s'", filename);
+        kernel->machine->WriteRegister(2, -1);
+        return;
+    }
+    kernel->machine->WriteRegister(2, 0);
+    return;
+}
+
+/*  Xu ly syscall Exec
+    Input: buffer (char*) ten cua process
+*/
 void SysExec(char *name)
 {
     // Khi name == NULL, thong bao loi
     if (name == NULL)
     {
-        DEBUG('a', "Name cannot be NULL");
-        printf("Name cannot be NULL");
+        DEBUG('a', "Name can not be NULL");
+        printf("Name can not be NULL");
         kernel->machine->WriteRegister(2, -1);
         return;
     }
     // Mo mot file moi
     OpenFile *oFile = kernel->fileSystem->Open(name);
-    
     if (oFile == NULL)
     {
         printf("Can't open this file.\n");
         kernel->machine->WriteRegister(2, -1);
         return;
     }
-
     delete oFile;
     int id = kernel->pTab->ExecUpdate(name);
     kernel->machine->WriteRegister(2, id);
 }
 
-
+/* Xu ly syscall Join
+    Input: pid tien trinh cha join 
+*/
 int SysJoin(int pid)
 {
     return kernel->pTab->JoinUpdate(pid);
 }
 
+/* Xu ly syscall Exit
+    Input: exit code
+*/
 void SysExit(int ec)
 {
     kernel->pTab->ExitUpdate(ec);
@@ -78,7 +270,7 @@ void SysExit(int ec)
     kernel->currentThread->Finish();
 }
 
-
+// Xu li syscall Open file
 OpenFileID SysOpen(char *filename, int type)
 {
     int pid = kernel->currentThread->processID;
@@ -112,8 +304,6 @@ int SysCreateSemaphore(char *name, int semVal)
     }
     return res;
 }
-
-
 
 /* Xu ly syscall Wait
     input: semaphore name
@@ -186,156 +376,5 @@ int SysSeek(int position, OpenFileId id)
     int pid = kernel->currentThread->processID;
     return kernel->pTab->Seek(pid, position, id);
 }
-
-
-
-void SysCreateFile(char *filename)
-{
-  if (filename == NULL)
-  {
-    printf("\n Not enough memory in system");
-    DEBUG(dbgSys, "\n Not enough memory in system");
-    kernel->machine->WriteRegister(2, -1); // set value -1 cho thanh ghi 2 (thanh ghi trả về)
-
-    // delete filename;
-    return; // kết thúc chương trình
-  }
-  DEBUG(dbgSys, "\n Finish reading filename.");
-  
-  // check file is existed
-  if (doesFileExist(filename))
-  {
-    DEBUG(dbgSys, "\n Error create file: File is existed.");
-    // printf("\n Error create file: File is existed.");
-    kernel->machine->WriteRegister(2, -1);
-    return;
-  }
-
-  if (!kernel->fileSystem->Create(filename, 0))
-  {
-    printf("\n Error create file '%s'", filename);
-    kernel->machine->WriteRegister(2, -1);
-    // delete filename;
-    return;
-  }
-  DEBUG(dbgSys, "\n Create file sucessfully.");
-  kernel->machine->WriteRegister(2, 0);
-  return;
-}
-
-int FindFreeSocketTableSlot(FD_Table *table)
-{
-  for (int i = 0; i < MaxSocketTableSize; i++)
-  {
-    if (table[i].socketID == 0)
-    {
-      return i;
-    }
-  }
-  return -1;
-}
-
-void SysSocketTCP(FD_Table *table)
-{
-  
-  int freeSocketIDIndex = -1;
-  freeSocketIDIndex = FindFreeSocketTableSlot(table);
-  if (freeSocketIDIndex == -1)
-  {
-    DEBUG(dbgSys, "Out of range");
-    kernel->machine->WriteRegister(2, -1);
-    return;
-  }
-  int fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (fd == -1)
-  {
-    DEBUG(dbgSys, "Cann't create socketTCP");
-    kernel->machine->WriteRegister(2, -1);
-    return;
-  }
-
-  table[freeSocketIDIndex].socketID = fd;
-  DEBUG(dbgSys, "Add socket id to table successfully.");
-  DEBUG(dbgSys, "ID: " << fd);
-  kernel->machine->WriteRegister(2, fd);
-  return;
-}
-
-void SysConnect(char *addressIp, int ServerPort, int socketid)
-{
-  int iRetval = -1;
-  struct sockaddr_in remote = {0};
-
-  remote.sin_addr.s_addr = inet_addr(addressIp);
-  remote.sin_family = AF_INET;
-  remote.sin_port = htons(ServerPort);
-  iRetval = connect(socketid, (struct sockaddr *)&remote, sizeof(struct sockaddr_in));
-  if (iRetval < 0)
-  {
-    DEBUG(dbgSys, "Connection Failed");
-    kernel->machine->WriteRegister(2, -1);
-    return;
-  }
-  else
-  {
-    DEBUG(dbgSys, "Connection successfully");
-    kernel->machine->WriteRegister(2, 0);
-  }
-  return;
-}
-
-// int storeMem(char** argv, int argc) {
-//     if (argv == NULL || argc == 0)
-//         return 0;
-    
-//     int vir_stack = kernel->machine->ReadRegister(StackReg);
-    
-//     // Allocate memory for the array of pointers
-//     int pointersSize = argc * sizeof(char*);
-//     char** argvCopy = new char*[argc];
-
-//     // Write the array of pointers to memory
-//     kernel->machine->WriteMem(vir_stack, pointersSize, reinterpret_cast<int>(argvCopy));
-
-//     // Write each string to memory and update the pointers
-//     int stringStartAddr = vir_stack + pointersSize;
-//     for (int i = 0; i < argc; i++) {
-//         const char* str = argv[i];
-//         int strLength = strlen(str) + 1;  // Include null terminator
-
-//         // Allocate memory for the string and copy it to memory
-//         kernel->machine->WriteMem(vir_stack + i * sizeof(char*), sizeof(char*), stringStartAddr);
-//         kernel->machine->WriteMem(stringStartAddr, strLength, reinterpret_cast<int>(str));
-
-//         // Update the pointer in argvCopy
-//         argvCopy[i] = reinterpret_cast<char*>(stringStartAddr);
-
-//         // Move the stringStartAddr to the next string
-//         stringStartAddr += strLength;
-//     }
-
-//     // Cleanup: delete temporary arrays
-//     delete[] argvCopy;
-
-//     return vir_stack;
-// }
-
-// void Argv()
-// {
-// 	char **argv = kernel->currentThread->getArgv;
-// 	int stack = storeMem(kernel->currentThread->getArgv, kernel->currentThread->getArgc);
-// 	kernel->machine->WriteRegister(2, stack);
-// }
-
-// void Argc()
-// {
-// 	kernel->machine->WriteRegister(2, kernel->currentThread->getArgc);
-// 	cout << kernel->currentThread->getArgc;
-// }
-
-// int SysCloseSocket()
-// {
-
-// }
 
 #endif /* ! __USERPROG_KSYSCALL_H__ */

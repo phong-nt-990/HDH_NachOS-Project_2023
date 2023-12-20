@@ -17,26 +17,26 @@ class Semaphore;
 
 class PTable {
 private:
-    Bitmap *bm;             /// mark the locations that have been used in pcb
+    Bitmap *bm;             // Danh dau cac vi tri da su dung
     PCB *pcb[MAX_PROCESS];
     int psize;
-    Semaphore *bmsem;       // used to prevent the case of loading 2 processes at the same time
+    Semaphore *bmsem;       // Semaphore de ngan chan
+                            //   2 tien trinh nap cung luc
 public:
-//Constructor initialize the size of the PCB object to store the process size. Set the initial value to null
     PTable(int size);
-    ~PTable(); // Destructor
+    ~PTable();
 
 
-    void ExitUpdate(int ec);    // Process the syscall SC_Exec
-    int ExecUpdate(char *name); // Process the syscall SC_Exit
-    int JoinUpdate(int id);     // Process the syscall SC_Join
+    void ExitUpdate(int ec);    // Xu li syscall SC_Exit
+    int ExecUpdate(char *name); // Xu li syscall SC_Exec
+    int JoinUpdate(int id);     // XU li syscall SC_Join
 
-    bool IsExist(int pid);      // Find the free slot in PTable to save the new process information
-    int GetFreeSlot();          // Check a process exist or not
-    void Remove(int pid);       // Delete the PID from the PTable
+    bool IsExist(int pid);      // Kiem tra xem co ton tai chua
+    int GetFreeSlot();          // Tim mot slot de luu tien trinh
+    void Remove(int pid);       // Xoa thong tin tien trinh
     char *GetFileName(int id);  // Tra ve ten tien trinh
 
-    void initStartProcess(char* name);  // Return the process name
+    void initStartProcess(char* name);  // Khoi chay tien trinh
    
     OpenFileID Open(int pid, char*name, int type);  // mo file name o tien trinh pid
     int Close(int pid, OpenFileID fid); // dong file fid o tien trinh pid

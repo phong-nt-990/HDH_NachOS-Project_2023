@@ -60,7 +60,6 @@ int PTable::ExecUpdate(char *name) {
         return -1;
     }
 
-    DEBUG(dbgSys, "\n Not enough memory in system");
     int index = this->GetFreeSlot();
     // Khong con free slot
     if (index < 0) {

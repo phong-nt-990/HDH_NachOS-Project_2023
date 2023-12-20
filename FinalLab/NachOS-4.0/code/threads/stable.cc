@@ -4,7 +4,7 @@
 
 #include "stable.h"
 
-// // --------- Sem implementation ---------
+// --------- Sem implementation ---------
 Sem::Sem(char *semName, int value) {
     this->name = new char[strlen(semName) + 1];
     strcpy(this->name, semName);
@@ -29,7 +29,7 @@ void Sem::signal() {
     this->sem->V();
 }
 
-// // --------- STable implementation ----------
+// --------- STable implementation ----------
 STable::STable() {
     this->mSemBitMap = new Bitmap(MAX_SEMAPHORE);
     for (unsigned int i = 0; i < MAX_SEMAPHORE; ++i) {

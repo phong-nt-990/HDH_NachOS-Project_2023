@@ -330,24 +330,6 @@ OpenForReadWrite(char *name, bool crashOnError)
     return fd;
 }
 
-
-//----------------------------------------------------------------------
-// OpenForRead
-// 	Open a file for reading only.
-//	Return the file descriptor, or error if it doesn't exist.
-//
-//	"name" -- file name
-//----------------------------------------------------------------------
-int
-OpenForRead(char *name, bool crashOnError)
-{
-    int fd = open(name, O_RDONLY, 0);
-
-    ASSERT(!crashOnError || fd >= 0);
-    return fd;
-}
-
-
 //----------------------------------------------------------------------
 // Read
 // 	Read characters from an open file.  Abort if read fails.
