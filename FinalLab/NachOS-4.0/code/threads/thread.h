@@ -40,6 +40,7 @@
 #include "copyright.h"
 #include "utility.h"
 #include "sysdep.h"
+#include <stdio.h>
 
 #include "machine.h"
 #include "addrspace.h"
@@ -53,6 +54,8 @@
 
 #define MachineStateSize 75 
 
+#define THREAD_MIN_PRIORITY
+#define THREAD_MAX_PRIORITY
 
 // Size of the thread's private execution stack.
 // WATCH OUT IF THIS ISN'T BIG ENOUGH!!!!!
@@ -88,15 +91,12 @@ class Thread {
 					// must not be running when delete 
 					// is called
 
-    // 
-    int processID;
-    // int exitStatus;
-    void FreeSpace(){
-      if (space != 0)
-        delete space;
-    }
-
     // basic thread operations
+    int processID;
+    int exitStatus;
+    void FreeSpace() {
+      if (space != 0) delete space;
+    }
 
     void Fork(VoidFunctionPtr func, void *arg); 
     				// Make thread run (*func)(arg)

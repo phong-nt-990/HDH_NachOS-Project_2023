@@ -29,72 +29,39 @@
 					// See definitions listed under #else
 class OpenFile {
   public:
-    //Khai bao bien type
-  	int type;
-	char* filename;
-  	
-	//Ham dung cua class OpenFile
-	OpenFile(int f,char* name) { 
-		file = f; currentOffset = 0; type = 0;
-		this->filename = new char[strlen(name) + 1];
-        strncpy(this->filename, name, strlen(name));
-	}	// mo file mac dinh
-
-	OpenFile(int f, int t,char* name) { 
-		file = f; currentOffset = 0; type = t; 
-		this->filename = new char[strlen(name) + 1];
-        strncpy(this->filename, name, strlen(name));
-	}	// mo file voi tham so type
-
+	int type;
+	int console_type;
+    OpenFile(int f) { file = f; currentOffset = 0;}	// open the file
+	OpenFile(int f,int t) { file = f; currentOffset = 0; type = t;}	// open the file
     ~OpenFile() { Close(file); }			// close the file
 
-	char* GetFilename(){
-		return this->filename;
-	}
-
-	int Seek(int pos) {
-		Lseek(file, pos, 0);
-		currentOffset = Tell(file);
-		return currentOffset;
-	}
-
-	int ReadAt(char *into, int numBytes, int position) { 
+    int ReadAt(char *into, int numBytes, int position) { 
     		Lseek(file, position, 0); 
 		return ReadPartial(file, into, numBytes); 
-	}	
-
+		}	
     int WriteAt(char *from, int numBytes, int position) { 
     		Lseek(file, position, 0); 
 		WriteFile(file, from, numBytes); 
 		return numBytes;
-	}
-
+		}	
     int Read(char *into, int numBytes) {
 		int numRead = ReadAt(into, numBytes, currentOffset); 
 		currentOffset += numRead;
 		return numRead;
-    }
-
+    		}
     int Write(char *from, int numBytes) {
 		int numWritten = WriteAt(from, numBytes, currentOffset); 
 		currentOffset += numWritten;
 		return numWritten;
 		}
 
-    //int Length() { Lseek(file, 0, 2); return Tell(file); }
-    int Length() {
-		int len;
-		Lseek(file, 0, 2);
-		len = Tell(file);
-		Lseek(file, currentOffset, 0);
-		return len;
-	}
-
+    int Length() { Lseek(file, 0, 2); return Tell(file); }
 	int GetCurrentPos() { currentOffset = Tell(file); return currentOffset; }
-
+    void Seek(int position){seekPosition = position;}
   private:
     int file;
     int currentOffset;
+	int seekPosition;
 };
 
 #else // FILESYS
@@ -102,7 +69,6 @@ class FileHeader;
 
 class OpenFile {
   public:
-  int type;
     OpenFile(int sector);		// Open a file whose header is located
 					// at "sector" on the disk
     ~OpenFile();			// Close the file
@@ -125,10 +91,6 @@ class OpenFile {
 					// file (this interface is simpler 
 					// than the UNIX idiom -- lseek to 
 					// end of file, tell, lseek back 
-	int GetCurrentPos()
-	{
-		return seekPosition;
-	}
     
   private:
     FileHeader *hdr;			// Header for this file 

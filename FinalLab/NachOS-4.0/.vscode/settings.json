@@ -4,7 +4,6 @@
         "stdlib.h": "c",
         "stdio.h": "c",
         "stdarg.h": "c",
-        "new": "cpp",
-        "syscall.h": "c"
+        "new": "cpp"
     }
 }

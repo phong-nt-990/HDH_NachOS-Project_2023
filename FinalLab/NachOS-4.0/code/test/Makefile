@@ -112,9 +112,7 @@ ifeq ($(hosttype),unknown)
 PROGRAMS = unknownhost
 else
 # change this if you create a new test program!
-
-PROGRAMS = add halt shell matmult sort segments help ascii testsyscall ping pong consoleio main student pipe main_1 student_1 proc01 proc02 multiproc scheduler
-
+PROGRAMS = add halt shell matmult sort segments
 endif
 
 all: $(PROGRAMS)
@@ -134,13 +132,78 @@ add.o: add.c
 add: add.o start.o
 	$(LD) $(LDFLAGS) start.o add.o -o add.coff
 	$(COFF2NOFF) add.coff add
+// =========================
+open_file.o: open_file.c
+	$(CC) $(CFLAGS) -c open_file.c
 
-scheduler.o: scheduler.c
-	$(CC) $(CFLAGS) -c scheduler.c
+open_file: open_file.o start.o
+	$(LD) $(LDFLAGS) start.o open_file.o -o open_file.coff
+	$(COFF2NOFF) open_file.coff open_file
 
-scheduler: scheduler.o start.o
-	$(LD) $(LDFLAGS) start.o scheduler.o -o scheduler.coff
-	$(COFF2NOFF) scheduler.coff scheduler
+read_file.o: read_file.c
+	$(CC) $(CFLAGS) -c read_file.c
+
+read_file: read_file.o start.o
+	$(LD) $(LDFLAGS) start.o read_file.o -o read_file.coff
+	$(COFF2NOFF) read_file.coff read_file
+
+write_file.o: write_file.c
+	$(CC) $(CFLAGS) -c write_file.c
+
+write_file: write_file.o start.o
+	$(LD) $(LDFLAGS) start.o write_file.o -o write_file.coff
+	$(COFF2NOFF) write_file.coff write_file
+
+cat.o: cat.c
+	$(CC) $(CFLAGS) -c cat.c
+
+cat: cat.o start.o
+	$(LD) $(LDFLAGS) start.o cat.o -o cat.coff
+	$(COFF2NOFF) cat.coff cat
+
+copy.o: copy.c
+	$(CC) $(CFLAGS) -c copy.c
+
+copy: copy.o start.o
+	$(LD) $(LDFLAGS) start.o copy.o -o copy.coff
+	$(COFF2NOFF) copy.coff copy
+
+delete.o: delete.c
+	$(CC) $(CFLAGS) -c delete.c
+
+delete: delete.o start.o
+	$(LD) $(LDFLAGS) start.o delete.o -o delete.coff
+	$(COFF2NOFF) delete.coff delete
+
+concatenate.o: concatenate.c
+	$(CC) $(CFLAGS) -c concatenate.c
+
+concatenate: concatenate.o start.o
+	$(LD) $(LDFLAGS) start.o concatenate.o -o concatenate.coff
+	$(COFF2NOFF) concatenate.coff concatenate
+
+echoclient.o: echoclient.c
+	$(CC) $(CFLAGS) -c echoclient.c
+
+echoclient: echoclient.o start.o
+	$(LD) $(LDFLAGS) start.o echoclient.o -o echoclient.coff
+	$(COFF2NOFF) echoclient.coff echoclient
+
+
+fileclient.o: fileclient.c
+	$(CC) $(CFLAGS) -c fileclient.c
+
+fileclient: fileclient.o start.o
+	$(LD) $(LDFLAGS) start.o fileclient.o -o fileclient.coff
+	$(COFF2NOFF) fileclient.coff fileclient
+
+//=========================
+createfile.o: createfile.c
+	$(CC) $(CFLAGS) -c createfile.c
+
+createfile: createfile.o start.o
+	$(LD) $(LDFLAGS) start.o createfile.o -o createfile.coff
+	$(COFF2NOFF) createfile.coff createfile
 
 shell.o: shell.c
 	$(CC) $(CFLAGS) -c shell.c
@@ -165,91 +228,6 @@ matmult.o: matmult.c
 matmult: matmult.o start.o
 	$(LD) $(LDFLAGS) start.o matmult.o -o matmult.coff
 	$(COFF2NOFF) matmult.coff matmult
-
-ascii.o: ascii.c
-	$(CC) $(CFLAGS) -c ascii.c
-ascii: ascii.o start.o
-	$(LD) $(LDFLAGS) start.o ascii.o -o ascii.coff
-	$(COFF2NOFF) ascii.coff ascii
-	
-help.o: help.c
-	$(CC) $(CFLAGS) -c help.c
-help: help.o start.o
-	$(LD) $(LDFLAGS) start.o help.o -o help.coff
-	$(COFF2NOFF) help.coff help
-
-testsyscall.o: testsyscall.c
-	$(CC) $(CFLAGS) -c testsyscall.c
-testsyscall: testsyscall.o start.o
-	$(LD) $(LDFLAGS) start.o testsyscall.o -o testsyscall.coff
-	$(COFF2NOFF) testsyscall.coff testsyscall
-
-
-ping.o: ping.c
-	$(CC) $(CFLAGS) -c ping.c
-ping: ping.o start.o
-	$(LD) $(LDFLAGS) start.o ping.o -o ping.coff
-	$(COFF2NOFF) ping.coff ping
-
-multiproc.o: multiproc.c
-	$(CC) $(CFLAGS) -c multiproc.c
-multiproc: multiproc.o start.o
-	$(LD) $(LDFLAGS) start.o multiproc.o -o multiproc.coff
-	$(COFF2NOFF) multiproc.coff multiproc
-
-proc01.o: proc01.c
-	$(CC) $(CFLAGS) -c proc01.c
-proc01: proc01.o start.o
-	$(LD) $(LDFLAGS) start.o proc01.o -o proc01.coff
-	$(COFF2NOFF) proc01.coff proc01
-
-proc02.o: proc02.c
-	$(CC) $(CFLAGS) -c proc02.c
-proc02: proc02.o start.o
-	$(LD) $(LDFLAGS) start.o proc02.o -o proc02.coff
-	$(COFF2NOFF) proc02.coff proc02
-
-pong.o: pong.c
-	$(CC) $(CFLAGS) -c pong.c
-pong: pong.o start.o
-	$(LD) $(LDFLAGS) start.o pong.o -o pong.coff
-	$(COFF2NOFF) pong.coff pong
-
-consoleio.o: consoleio.c
-	$(CC) $(CFLAGS) -c consoleio.c
-consoleio: consoleio.o start.o
-	$(LD) $(LDFLAGS) start.o consoleio.o -o consoleio.coff
-	$(COFF2NOFF) consoleio.coff consoleio
-
-main.o: main.c
-	$(CC) $(CFLAGS) -c main.c
-main: main.o start.o
-	$(LD) $(LDFLAGS) start.o main.o -o main.coff
-	$(COFF2NOFF) main.coff main
-
-student.o: student.c
-	$(CC) $(CFLAGS) -c student.c
-student: student.o start.o
-	$(LD) $(LDFLAGS) start.o student.o -o student.coff
-	$(COFF2NOFF) student.coff student
-
-pipe.o: pipe.c
-	$(CC) $(CFLAGS) -c pipe.c
-pipe: pipe.o start.o
-	$(LD) $(LDFLAGS) start.o pipe.o -o pipe.coff
-	$(COFF2NOFF) pipe.coff pipe
-
-main_1.o: main_1.c
-	$(CC) $(CFLAGS) -c main_1.c
-main_1: main_1.o start.o
-	$(LD) $(LDFLAGS) start.o main_1.o -o main_1.coff
-	$(COFF2NOFF) main_1.coff main_1
-
-student_1.o: student_1.c
-	$(CC) $(CFLAGS) -c student_1.c
-student_1: student_1.o start.o
-	$(LD) $(LDFLAGS) start.o student_1.o -o student_1.coff
-	$(COFF2NOFF) student_1.coff student_1
 
 clean:
 	$(RM) -f *.o *.ii
