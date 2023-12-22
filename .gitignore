@@ -1,0 +1,8 @@
+
+*.o
+*.o
+*.o
+FinalLab/NachOS-4.0/code/build.linux/stats.o
+*.o
+FinalLab/NachOS-4.0/code/userprog/pcb.h
+FinalLab/NachOS-4.0/code/userprog/pcb.cc
