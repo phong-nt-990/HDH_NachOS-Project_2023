@@ -41,12 +41,6 @@
 #define SC_Close_Socket 20
 #define SC_PrintString 21
 #define SC_PrintNum 22
-// syscall semaphore
-#define SC_CreateSemaphore 23
-#define SC_Up 24 
-#define SC_Down 25
-#define SC_GetPID 26
-
 
 #define SC_Add		42
 
@@ -118,13 +112,8 @@ typedef int OpenFileId;
  * the console device.
  */
 
-// #define _ConsoleInput	0  
-// #define _ConsoleOutput	1  
- 
-#define CONSOLE_INPUT 0 
-#define CONSOLE_OUTPUT 1
-// if this necessary, uncomment it
-
+#define _ConsoleInput	0  
+#define _ConsoleOutput	1  
  
 /* Create a Nachos file, with name "name" */
 /* Note: Create does not open the file.   */
@@ -188,13 +177,6 @@ int Close_Socket(int socketid);
 int PrintString(char *buffer);
 
 int PrintNum(int num);
-
-int CreateSemaphore(char *name, int value);
-
-int Up(char *name);
-
-int Down(char *name);
-
 /* User-level thread operations: Fork and Yield.  To allow multiple
  * threads to run within a user program. 
  *

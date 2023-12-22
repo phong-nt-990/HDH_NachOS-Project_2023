@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "fstream": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "stdarg.h": "c",
+        "new": "cpp"
+    }
+}

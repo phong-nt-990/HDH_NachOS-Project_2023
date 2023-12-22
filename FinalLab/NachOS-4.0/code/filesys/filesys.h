@@ -45,7 +45,6 @@
 
 #ifdef FILESYS_STUB // Temporarily implement file system calls as
 #define FILE_MAX 20
-typedef int OpenFileID;
 // calls to UNIX, until the real file system
 // implementation is available
 // #define CONSOLE_IN 0

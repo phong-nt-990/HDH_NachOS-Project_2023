@@ -88,13 +88,6 @@ class Thread {
 					// must not be running when delete 
 					// is called
 
-    int processID;
-    // int exitStatus;
-    void FreeSpace(){
-      if (space != 0)
-        delete space;
-    }
-
     // basic thread operations
 
     void Fork(VoidFunctionPtr func, void *arg); 

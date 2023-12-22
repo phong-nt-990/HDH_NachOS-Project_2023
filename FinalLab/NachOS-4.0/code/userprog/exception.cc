@@ -630,124 +630,14 @@ void ExceptionHandler(ExceptionType which)
             move_program_counter();
             return;
         }
-
-        case SC_Exec:
-        {
-            int virtualAddr = kernel->machine->ReadRegister(4); // Doc tham so dia chi buffer
-            char *name;
-            name = User2System(virtualAddr, MAX_FILENAME_LENGTH + 1);   // MAX_FILENAME_LENGTH in PCB
-            SysExec(name);
-            if (name != NULL)   // Neu ten file khac null thi giai phong bo nho
-                delete[] name;
-            move_program_counter();
-            return;
-        }
-
-        case SC_Join:
-        {
-            int pid;
-            pid = kernel->machine->ReadRegister(4);         // Doc tham so id cua tien trinh
-            kernel->machine->WriteRegister(2, SysJoin(pid));// Ghi ket qua tu viec goi ham SysJoin 
-            move_program_counter();
-            return;
-        }
-        case SC_Exit:
-        {
-            int exitCode;
-            exitCode = kernel->machine->ReadRegister(4);    // Doc tham so exit code
-            SysExit(exitCode);
-            move_program_counter();
-            return;
-        }
-
-        case SC_CreateSemaphore:
-        {
-            int virtualAddr = kernel->machine->ReadRegister(4);
-            int semVal = kernel->machine->ReadRegister(5);
-            char *name = User2System(virtualAddr, MAX_FILENAME_LENGTH + 1);
-            int result = SysCreateSemaphore(name, semVal);
-            if (name != NULL)
-                delete[] name;
-            // ghi ket qua tra ve
-            kernel->machine->WriteRegister(2, result);
-            move_program_counter();
-            return;
-        }
-
-        case SC_Down:
-        {
-            int virtualAddr = kernel->machine->ReadRegister(4);
-            char *name = User2System(virtualAddr, MAX_FILENAME_LENGTH + 1);
-            int result = SysDown(name);
-
-            kernel->machine->WriteRegister(2, result);
-            move_program_counter();
-            return;
-        }
-        // xu ly syscall Signal
-        case SC_Up:
-        {
-            int virtualAddr = kernel->machine->ReadRegister(4);
-            char *name = User2System(virtualAddr, MAX_FILENAME_LENGTH + 1);
-            int result = SysUp(name);
-
-            kernel->machine->WriteRegister(2, result);
-            move_program_counter();
-            return;
-        }
-
         default:
-            cerr << "Unexpected system call " << type << "\n";
+            cerr << "Unexpected user mode exception" << (int)which << "\n";
             move_program_counter();
             break;
         }
-        break;
-        
-    case PageFaultException:
-        DEBUG(dbgSys, "No valid translation found\n");
-        printf("No valid translation found\n");
-        SysHalt();
-        break;
 
-    case ReadOnlyException:
-        DEBUG(dbgSys, "Write attempted to page marked \"read-only\"\n");
-        printf("Write attempted to page marked \"read-only\"\n");
-        SysHalt();
-        break;
-
-    case BusErrorException:
-        DEBUG(dbgSys, "Translation resulted in an invalid physical address\n");
-        printf("Translation resulted in an invalid physical address\n");
-        SysHalt();
-        break;
-
-    case AddressErrorException:
-        DEBUG(dbgSys, "Unaligned reference or one that was beyond the end of the address space\n");
-        printf("Unaligned reference or one that was beyond the end of the address space\n");
-        SysHalt();
-        break;
-
-    case OverflowException:
-        DEBUG(dbgSys, "Integer overflow in add or sub\n");
-        printf("Integer overflow in add or sub\n");
-        SysHalt();
-        break;
-
-    case IllegalInstrException:
-        DEBUG(dbgSys, "Unimplemented or reserved instr\n");
-        printf("Unimplemented or reserved instr\n");
-        SysHalt();
-        break;
-
-    case NumExceptionTypes:
-        DEBUG(dbgSys, "Number exception types\n");
-        printf("Number Exception types\n");
-        SysHalt();
-        break;
-    
-    default:
-        cerr << "Unexpected user mode exception" << which << "\n";
-    break;
-    }
+        move_program_counter();
+        return;
         ASSERTNOTREACHED();
+    }
 }
