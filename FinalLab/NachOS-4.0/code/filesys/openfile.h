@@ -30,10 +30,28 @@
 class OpenFile {
   public:
 	int type;
-	int console_type;
-    OpenFile(int f) { file = f; currentOffset = 0;}	// open the file
-	OpenFile(int f,int t) { file = f; currentOffset = 0; type = t;}	// open the file
+	char* filename;
+	// int console_type;
+    // OpenFile(int f) { file = f; currentOffset = 0;}	// open the file
+	// OpenFile(int f,int t) { file = f; currentOffset = 0; type = t;}	// open the file
+
+	OpenFile(int f,char* name) { 
+		file = f; currentOffset = 0; type = 0;
+		this->filename = new char[strlen(name) + 1];
+        strncpy(this->filename, name, strlen(name));
+	}	
+
+	OpenFile(int f, int t,char* name) { 
+		file = f; currentOffset = 0; type = t; 
+		this->filename = new char[strlen(name) + 1];
+        strncpy(this->filename, name, strlen(name));
+	}
+
     ~OpenFile() { Close(file); }			// close the file
+
+	char* GetFilename() {
+		return this->filename;
+	}
 
     int ReadAt(char *into, int numBytes, int position) { 
     		Lseek(file, position, 0); 

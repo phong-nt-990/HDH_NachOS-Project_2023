@@ -105,6 +105,18 @@ int System2User(int virtAddr, int len, char *buffer)
     return i;
 }
 
+char **readCharsArray(int reg, int size)
+{
+    char **argv = new char *[size];
+    int listAddr = kernel->machine->ReadRegister(reg);
+
+    for (int i = 0; i < size; i++)
+    {
+        argv[i] = User2System(listAddr + i * BUFFER_SIZE, MAX_FILENAME_LENGTH);
+    }
+    return argv;
+}
+
 // tăng địa chỉ thanh ghi PC  lên 4 byte, load instruction tiếp theo
 void move_program_counter()
 {
@@ -630,14 +642,152 @@ void ExceptionHandler(ExceptionType which)
             move_program_counter();
             return;
         }
+
+        case SC_Exec:
+        {
+            int virtualAddr = kernel->machine->ReadRegister(4); // Doc tham so dia chi buffer
+            char *name = NULL;
+            name = User2System(virtualAddr, MAX_FILENAME_LENGTH + 1);   // MAX_FILENAME_LENGTH in PCB
+            int res = SysExec(name);
+            if (name != NULL)   // Neu ten file khac null thi giai phong bo nho
+                delete[] name;
+            kernel->machine->WriteRegister(2, res);
+            move_program_counter();
+            return;
+        }
+
+        case SC_ExecV:
+        {
+            DEBUG(dbgSys, "SC_ExecV call ...\n");
+
+            // char *progname = readChars(4, MAX_FILENAME_LENGTH);
+            int argc = readInt(4);
+            char **argv = readCharsArray(5, argc);
+            char *progname = argv[0];
+
+            if (!progname) return;
+            DEBUG(dbgSys, "File name : '" << progname << "'\n");
+
+            //  Create a new process using pTab ExecUpdate to execute the program
+            int pid = kernel->pTab->ExecVUpdate(progname, argc, argv);
+            if (pid == -1)
+            {
+                DEBUG(dbgSys, "Can't exec file '" << progname << "'\n");
+                kernel->machine->WriteRegister(2, (int)-1);
+                delete progname;
+                return;
+            }
+
+            DEBUG(dbgSys, "Successful exec file '" << progname << "'\n");
+            kernel->machine->WriteRegister(2, pid); // trả về cho chương trình người dùng thành công
+            delete progname;
+        }
+
+        case SC_Join:
+        {
+            int pid;
+            pid = kernel->machine->ReadRegister(4);         // Doc tham so id cua tien trinh
+            kernel->machine->WriteRegister(2, SysJoin(pid));// Ghi ket qua tu viec goi ham SysJoin 
+            move_program_counter();
+            return;
+        }
+        case SC_Exit:
+        {
+            int exitCode;
+            exitCode = kernel->machine->ReadRegister(4);    // Doc tham so exit code
+            SysExit(exitCode);
+            move_program_counter();
+            return;
+        }
+
+        case SC_CreateSemaphore:
+        {
+            int virtualAddr = kernel->machine->ReadRegister(4);
+            int semVal = kernel->machine->ReadRegister(5);
+            char *name = User2System(virtualAddr, MAX_FILENAME_LENGTH + 1);
+            int result = SysCreateSemaphore(name, semVal);
+            if (name != NULL)
+                delete[] name;
+            // ghi ket qua tra ve
+            kernel->machine->WriteRegister(2, result);
+            move_program_counter();
+            return;
+        }
+
+        case SC_Wait:
+        {
+            int virtualAddr = kernel->machine->ReadRegister(4);
+            char *name = User2System(virtualAddr, MAX_FILENAME_LENGTH + 1);
+            int result = SysWait(name);
+
+            kernel->machine->WriteRegister(2, result);
+            move_program_counter();
+            return;
+        }
+        // xu ly syscall Signal
+        case SC_Signal:
+        {
+            int virtualAddr = kernel->machine->ReadRegister(4);
+            char *name = User2System(virtualAddr, MAX_FILENAME_LENGTH + 1);
+            int result = SysSignal(name);
+
+            kernel->machine->WriteRegister(2, result);
+            move_program_counter();
+            return;
+        }
+
         default:
-            cerr << "Unexpected user mode exception" << (int)which << "\n";
+            cerr << "Unexpected system call " << type << "\n";
             move_program_counter();
             break;
         }
+        break;
+        
+    case PageFaultException:
+        DEBUG(dbgSys, "No valid translation found\n");
+        printf("No valid translation found\n");
+        SysHalt();
+        break;
 
-        move_program_counter();
-        return;
-        ASSERTNOTREACHED();
+    case ReadOnlyException:
+        DEBUG(dbgSys, "Write attempted to page marked \"read-only\"\n");
+        printf("Write attempted to page marked \"read-only\"\n");
+        SysHalt();
+        break;
+
+    case BusErrorException:
+        DEBUG(dbgSys, "Translation resulted in an invalid physical address\n");
+        printf("Translation resulted in an invalid physical address\n");
+        SysHalt();
+        break;
+
+    case AddressErrorException:
+        DEBUG(dbgSys, "Unaligned reference or one that was beyond the end of the address space\n");
+        printf("Unaligned reference or one that was beyond the end of the address space\n");
+        SysHalt();
+        break;
+
+    case OverflowException:
+        DEBUG(dbgSys, "Integer overflow in add or sub\n");
+        printf("Integer overflow in add or sub\n");
+        SysHalt();
+        break;
+
+    case IllegalInstrException:
+        DEBUG(dbgSys, "Unimplemented or reserved instr\n");
+        printf("Unimplemented or reserved instr\n");
+        SysHalt();
+        break;
+
+    case NumExceptionTypes:
+        DEBUG(dbgSys, "Number exception types\n");
+        printf("Number Exception types\n");
+        SysHalt();
+        break;
+    
+    default:
+        cerr << "Unexpected user mode exception" << which << "\n";
+    break;
     }
+        ASSERTNOTREACHED();
 }

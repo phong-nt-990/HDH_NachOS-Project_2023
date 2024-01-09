@@ -45,6 +45,7 @@
 
 #ifdef FILESYS_STUB // Temporarily implement file system calls as
 #define FILE_MAX 20
+typedef int OpenFileID;
 // calls to UNIX, until the real file system
 // implementation is available
 // #define CONSOLE_IN 0
@@ -136,7 +137,7 @@ public:
 
 		if (fileDescriptor == -1)
 			return NULL;
-		return new OpenFile(fileDescriptor);
+		return new OpenFile(fileDescriptor, name);
 	}
 
 	int FindFreeSlot()
@@ -166,7 +167,7 @@ public:
 		if (fileDescriptor == -1) return NULL;
 		// fd_index++;
 		// openfile[fd_index++] = OpenFile(fileDescriptor,type);
-		return new OpenFile(fileDescriptor,type);
+		return new OpenFile(fileDescriptor,type, name);
 	}
 	int checkIfFileOpened(char* filename)
 	{

@@ -18,6 +18,27 @@
 #include <arpa/inet.h>
 #define MaxSocketTableSize 20
 
+#define BUFFER_SIZE 100
+
+int readInt(int reg)
+{
+    DEBUG(dbgSys, "Reading integer number\n");
+
+    int num = kernel->machine->ReadRegister(reg);
+
+    return num;
+}
+// char **readCharsArray(int reg, int size)
+// {
+//     char **argv = new char *[size];
+//     int listAddr = kernel->machine->ReadRegister(reg);
+
+//     for (int i = 0; i < size; i++)
+//     {
+//         argv[i] = User2System(listAddr + i * BUFFER_SIZE, MAX_FILENAME_LENGTH);
+//     }
+//     return argv;
+// }
 
 void SysHalt()
 {
@@ -135,6 +156,137 @@ void SysConnect(char *addressIp, int ServerPort, int socketid)
   }
   return;
 }
+
+int SysExec(char *name)
+{
+    // Khi name == NULL, thong bao loi
+    if (name == NULL)
+    {
+        DEBUG('a', "Name can not be NULL");
+        printf("Name can not be NULL");
+        // kernel->machine->WriteRegister(2, -1);
+        return -1;
+    }
+
+    // Mo mot file moi
+    OpenFile *oFile = kernel->fileSystem->Open(name);
+    if (oFile == NULL)
+    {
+        printf("Can't open this file.\n");
+        // kernel->machine->WriteRegister(2, -1);
+        return -1;
+    }
+    delete oFile;
+    int id = kernel->pTab->ExecUpdate(name);
+    // kernel->machine->WriteRegister(2, id);
+    return id;
+
+}
+
+
+int SysJoin(int pid)
+{
+    return kernel->pTab->JoinUpdate(pid);
+}
+
+
+
+
+void SysExit(int ec)
+{
+    kernel->pTab->ExitUpdate(ec);
+    kernel->currentThread->FreeSpace();
+    kernel->currentThread->Finish();
+}
+
+OpenFileID SysOpen(char *filename, int type)
+{
+    int pid = kernel->currentThread->processID;
+    return kernel->pTab->Open(pid, filename, type);
+}
+
+int SysClose(int id)
+{
+    int pid = kernel->currentThread->processID;
+    return kernel->pTab->Close(pid, id);
+}
+int SysCreateSemaphore(char *name, int semVal)
+{
+    if (name == NULL)
+    {
+        DEBUG('a', "Not enough memory in System\n");
+        printf("Not enough memory in System\n");
+        return -1;
+    }
+    int res = kernel->semTab->Create(name, semVal);
+    if (res == -1)
+    {
+        printf("Can't create semaphore.\n");
+        return -1;
+    }
+    return res;
+}
+
+// void SysExecV()
+// {
+//     DEBUG(dbgSys, "SC_ExecV call ...\n");
+
+//     // char *progname = readChars(4, MAX_FILENAME_LENGTH);
+//     int argc = readInt(4);
+//     char **argv = readCharsArray(5, argc);
+//     char *progname = argv[0];
+
+//     if (!progname) return;
+//     DEBUG(dbgSys, "File name : '" << progname << "'\n");
+
+//     //  Create a new process using pTab ExecUpdate to execute the program
+//     int pid = kernel->pTab->ExecVUpdate(progname, argc, argv);
+//     if (pid == -1)
+//     {
+//         DEBUG(dbgSys, "Can't exec file '" << progname << "'\n");
+//         kernel->machine->WriteRegister(2, (int)-1);
+//         delete progname;
+//         return;
+//     }
+
+//     DEBUG(dbgSys, "Successful exec file '" << progname << "'\n");
+//     kernel->machine->WriteRegister(2, pid); // trả về cho chương trình người dùng thành công
+//     delete progname;
+// }
+
+int SysWait(char *name)
+{
+    if (name == NULL)
+    {
+        DEBUG('a', "Not enough memory in System\n");
+        printf("Not enough memory in System\n");
+        return -1;
+    }
+    int res = kernel->semTab->Wait(name);
+    if (res == -1)
+    {
+        printf("Semaphore %s doesn't exist.\n", name);
+        return -1;
+    }
+    return res;
+}
+int SysSignal(char *name)
+{
+    if (name == NULL)
+    {
+        DEBUG('a', "Not enough memory in System\n");
+        printf("Not enough memory in System\n");
+        return -1;
+    }
+    int res = kernel->semTab->Signal(name);
+    if (res == -1)
+    {
+        printf("Semaphore %s doesn't exist.\n", name);
+        return -1;
+    }
+    return res;
+}
+
 
 // int storeMem(char** argv, int argc) {
 //     if (argv == NULL || argc == 0)

@@ -50,6 +50,30 @@ Halt:
 	j	$31
 	.end Halt
 
+	.globl CreateSemaphore
+	.ent	CreateSemaphore
+CreateSemaphore:
+	addiu $2,$0,SC_CreateSemaphore
+	syscall
+	j 	$31
+	.end CreateSemaphore
+
+	.globl Wait
+	.ent	Wait
+Wait:
+	addiu $2,$0,SC_Wait
+	syscall
+	j 	$31
+	.end Wait
+
+	.globl Signal
+	.ent	Signal
+Signal:
+	addiu $2,$0,SC_Signal
+	syscall
+	j 	$31
+	.end Signal
+
 	.globl Add
 	.ent	Add
 Add:
@@ -57,6 +81,7 @@ Add:
 	syscall
 	j 	$31
 	.end Add
+
 
 	.globl Exit
 	.ent	Exit
@@ -73,6 +98,7 @@ Exec:
 	syscall
 	j	$31
 	.end Exec
+
 
 	.globl ExecV
 	.ent	ExecV
@@ -98,6 +124,15 @@ Create:
 	j	$31
 	.end Create
 
+
+	.globl PrintString
+	.ent	PrintString
+PrintString:
+	addiu $2,$0,SC_PrintString
+	syscall
+	j	$31
+	.end PrintString
+
 	.globl Remove
 	.ent	Remove
 Remove:
@@ -113,22 +148,6 @@ Open:
 	syscall
 	j	$31
 	.end Open
-
-	.globl PrintString
-	.ent	PrintString
-PrintString:
-	addiu $2,$0,SC_PrintString
-	syscall
-	j	$31
-	.end PrintString
-	
-	.globl PrintNum
-	.ent	PrintNum
-PrintNum:
-	addiu $2,$0,SC_PrintNum
-	syscall
-	j	$31
-	.end PrintNum
 
 	.globl Read
 	.ent	Read
@@ -162,51 +181,8 @@ Seek:
 	j	$31
 	.end Seek
 
-	.globl SocketTCP
-	.ent	SocketTCP
-SocketTCP:
-	addiu $2,$0,SC_SocketTCP
-	syscall
-	j	$31
-	.end SocketTCP
-
-	.globl Connect
-	.ent	Connect
-Connect:
-	addiu $2,$0,SC_Connect
-	syscall
-	j	$31
-	.end Connect
-
-	.globl Send
-	.ent	Send
-Send:
-	addiu $2,$0,SC_Send
-	syscall
-	j	$31
-	.end Send
-
-
-	.globl Receive
-	.ent	Receive
-Receive:
-	addiu $2,$0,SC_Receive
-	syscall
-	j	$31
-	.end Receive
-
-
-	.globl Close_Socket
-	.ent	Close_Socket
-Close_Socket:
-	addiu $2,$0, SC_Close_Socket
-	syscall
-	j	$31
-	.end Close_Socket
-
-
-	.globl ThreadFork
-	.ent    ThreadFork
+        .globl ThreadFork
+        .ent    ThreadFork
 ThreadFork:
         addiu $2,$0,SC_ThreadFork
         syscall
